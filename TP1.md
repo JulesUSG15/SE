@@ -209,9 +209,25 @@ chmod 766 ~/tests/t2/fich2
 
 ## 4. Flux de Redirection et Tubes
 
-- **`commande1 > fichier`** : Redirige la sortie de `commande1` vers `fichier`, en écrasant son contenu.
-- **`commande1 >> fichier`** : Redirige la sortie de `commande1` à la fin de `fichier`.
-- **`commande1 | commande2`** : Passe la sortie de `commande1` comme entrée à `commande2`.
+### Question 1 :
+1. **Créer un fichier `batman.txt` contenant la phrase "Gotham City" dans le répertoire `tests/t2`** :
+   ```bash
+   echo "Gotham City" > ~/tests/t2/batman.txt
+   ```
+
+2. **Copier le contenu de `batman.txt` dans un autre fichier nommé `robin.txt` sans utiliser la commande `cp` mais en utilisant un tube** :
+   ```bash
+   cat ~/tests/t2/batman.txt | tee ~/tests/t2/robin.txt > /dev/null
+   ```
+   Cette méthode avec `tee` permet de copier le contenu de `batman.txt` vers `robin.txt` et pourrait être utile dans des scripts ou des pipelines plus complexes où `tee` offre la flexibilité de copier les données vers plusieurs destinations à la fois ou de conserver la sortie dans le flux pour un traitement ultérieur.
+
+### Question 2 :
+La commande `wc -l /etc/passwd` compte le nombre de lignes présentes dans le fichier `/etc/passwd`. Ici, `wc` est la commande qui permet de compter le nombre de lignes, mots, et caractères dans les fichiers spécifiés, et l'option `-l` indique que nous sommes intéressés uniquement par le compte des lignes.
+
+Quant à `cat /etc/passwd | wc -l`, cette commande fait essentiellement la même chose, mais de manière légèrement différente :
+- `cat /etc/passwd` affiche le contenu du fichier `/etc/passwd`.
+- Le pipe `|` passe ce contenu comme entrée à la commande suivante.
+- `wc -l` compte alors le nombre de lignes de cette entrée.
 
 ## 5. Gestion des Processus
 
