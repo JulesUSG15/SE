@@ -231,7 +231,85 @@ Quant à `cat /etc/passwd | wc -l`, cette commande fait essentiellement la même
 
 ## 5. Gestion des Processus
 
+### Question 1 :
 - **`ps [options]`** : Affiche les processus en cours d'exécution. Les options `-e` et `-f` affichent tous les processus et plus de détails, respectivement.
 - **`top`** : Affiche les processus en temps réel, ainsi que des statistiques sur l'utilisation du système.
 - **`kill [options] [PID]`** : Envoie un signal au processus identifié par `[PID]`. Sans option, envoie SIGTERM. L'option `-9` envoie SIGKILL, forçant l'arrêt du processus.
 
+### Question 2 :
+1. **Nombre de processus appartenant à root**
+```bash
+ps -ef | grep '^root' | wc -l
+```
+- `ps -ef` affiche tous les processus en cours d'exécution dans un format complet.
+- `grep '^root'` filtre les lignes commençant par "root", correspondant aux processus dont l'UID est root.
+- `wc -l` compte le nombre de lignes, qui représente le nombre de processus appartenant à root.
+
+2. **Processus père de tous les autres**
+
+Le processus père de tous les autres processus dans les systèmes Unix et Linux est généralement `init` pour les systèmes utilisant SysVinit, ou `systemd` pour les systèmes l'ayant adopté comme Ubuntu récent, Fedora, et autres. Son PID est généralement `1`.
+```bash
+ps -p 1
+```
+Cette commande affiche les informations du processus dont le PID est 1, qui est le premier processus lancé au démarrage du système et par conséquent le parent de tous les autres processus.
+Notez que selon la distribution et la configuration de votre système, le processus avec PID 1 pourrait ne pas être `init` ou `systemd` mais c'est le cas le plus courant.
+
+### Question 3 :
+1. **Ouvrir `top`** :
+   - Dans un terminal, tapez `top` et appuyez sur Entrée.
+
+2. **Combien de processus sont présents actuellement sur votre ordinateur ?**
+   - Regardez la ligne commençant par "Tasks". Le nombre après "total" indique le nombre total de processus sur votre ordinateur.
+
+3. **Combien sont prêts (état running / en cours) ?**
+   - Sur la même ligne "Tasks", regardez le nombre après "running". Cela indique le nombre de processus qui sont actuellement en exécution.
+
+4. **Combien sont bloqués (état sleeping / en veille) ?**
+   - Toujours sur cette ligne "Tasks", le nombre après "sleeping" montre combien de processus sont en état de sommeil, c'est-à-dire pas activement en cours d'exécution mais pas arrêtés.
+
+5. **Combien de processus zombie y-a-t-il ?**
+   - Sur la ligne "Tasks", le nombre après "zombie" indique le nombre de processus zombies. Un processus zombie a terminé son exécution mais attend que son parent récupère son statut de sortie.
+
+Pour quitter `top`, vous pouvez appuyer sur "q".
+
+## 5.1
+### Question 1 :
+1. **Lancer `xclock` en arrière-plan** :
+   ```bash
+   xclock &
+   ```
+   - Cette commande lance l'horloge `xclock`, une horloge analogique (ou numérique selon les paramètres), dans un environnement graphique X Window. Le symbole `&` à la fin de la commande permet de lancer `xclock` en tant que processus d'arrière-plan, ce qui libère le terminal pour d'autres commandes sans fermer `xclock`.
+
+2. **Utiliser `pstree` pour trouver l'instance de `xclock`** :
+   ```bash
+   pstree | grep xclock
+   ```
+   - `pstree` affiche les processus en cours d'exécution sous forme d'arbre. Cette commande peut générer une sortie longue, c'est pourquoi elle est pipée (`|`) dans `grep xclock` pour filtrer et montrer uniquement les lignes contenant `xclock`. Cela vous aidera à trouver l'instance de `xclock` dans l'arbre des processus.
+
+### Question 2 :
+- **SIGINT (signal numéro 2)** : Ce signal est généralement généré par l'utilisateur en appuyant sur Ctrl+C dans le terminal. Il indique au processus de s'interrompre, offrant une manière propre de terminer les programmes en cours d'exécution.
+
+- **SIGQUIT (signal numéro 3)** : Généré par l'utilisateur en appuyant sur Ctrl+\ dans le terminal. Il indique au processus de quitter et de générer un fichier de core dump, ce qui peut être utile pour le débogage.
+
+- **SIGTERM (signal numéro 15)** : C'est le signal par défaut utilisé par la commande `kill` pour terminer un processus. Il signale au processus de se terminer proprement. Les processus peuvent écouter ce signal et le gérer s'ils ont besoin de réaliser des opérations de nettoyage avant de s'arrêter.
+
+- **SIGKILL (signal numéro 9)** : Ce signal force l'arrêt immédiat du processus. Contrairement à SIGTERM, le processus ne peut ni écouter ni intercepter ce signal. C'est un moyen infaillible de terminer un processus, mais il ne permet pas au processus de libérer ses ressources proprement.
+
+**Pour envoyer un signal SIGKILL au processus `xclock` :**
+D'abord, trouver l'ID du processus (PID) de `xclock`.
+```bash
+pgrep xclock
+```
+
+Ensuite, utilisez `kill` avec le PID pour envoyer SIGKILL à `xclock` :
+```bash
+kill -SIGKILL <PID>
+```
+
+Remplacez `<PID>` par le numéro PID réel de `xclock` trouvé à l'étape précédente. Si `pgrep xclock` retourne plusieurs PIDs, vous devrez décider lequel correspond à l'instance de `xclock` que vous souhaitez tuer, ou vous pouvez tuer toutes les instances en utilisant `pkill` :
+
+```bash
+pkill -SIGKILL xclock
+```
+
+Cette commande enverra le signal SIGKILL à toutes les instances de `xclock` en cours d'exécution.
