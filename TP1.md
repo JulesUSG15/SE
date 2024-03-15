@@ -58,38 +58,38 @@
 
 2. **Créez un deuxième répertoire `tests` dans votre répertoire racine, et deux sous-répertoires `t1` et `t2` dans le répertoire `tests`** :
    ```bash
-   mkdir ~/tests
-   mkdir ~/tests/t1
-   mkdir ~/tests/t2
+   mkdir tests
+   mkdir tests/t1
+   mkdir tests/t2
    ```
 
 3. **Déplacez le fichier `texte2.txt` précédent dans le répertoire `tests/t1`** :
    ```bash
-   mv tpse/texte2.txt ~/tests/t1/
+   mv tpse/texte2.txt tests/t1/
    ```
 
 4. **En utilisant la commande `cp`, copiez le fichier `texte2.txt` dans le répertoire `tpse`** :
    - Étant donné que nous avons déplacé `texte2.txt` dans `tests/t1`, nous devons d'abord le copier de là :
    ```bash
-   cp ~/tests/t1/texte2.txt tpse/
+   cp tests/t1/texte2.txt tpse/
    ```
 
 5. **Supprimez le répertoire `tests/t1` à l'aide de la commande `rmdir` et tapez `ls`** :
    ```bash
-   rmdir ~/tests/t1
+   rmdir tests/t1
    ```
    - Ensuite, vous pouvez vérifier si le répertoire a été supprimé en listant le contenu du répertoire parent :
    ```bash
-   ls ~/tests
+   ls tests
    ```
 
 6. **Pourquoi le répertoire `tests/t1` peut ne pas être supprimé avec `rmdir` ?**
 
-La commande `rmdir` ne supprime que les répertoires vides. Si `tests/t1` contient encore des fichiers ou des sous-répertoires (ce qui ne sera pas le cas ici puisque nous avons déplacé `texte2.txt` en dehors de celui-ci avant de tenter de le supprimer), la commande échouera en retournant une erreur indiquant que le répertoire n'est pas vide. Dans notre cas, comme `tests/t1` devrait être vide après le déplacement du fichier, `rmdir` devrait réussir à supprimer le répertoire.
+La commande `rmdir` ne supprime que lesrmdir tests/t1 répertoires vides. Si `tests/t1` contient encore des fichiers ou des sous-répertoires (ce qui ne sera pas le cas ici puisque nous avons déplacé `texte2.txt` en dehors de celui-ci avant de tenter de le supprimer), la commande échouera en retournant une erreur indiquant que le répertoire n'est pas vide. Dans notre cas, comme `tests/t1` devrait être vide après le déplacement du fichier, `rmdir` devrait réussir à supprimer le répertoire.
 
 ### Question 4 :
 ```bash
-rm -rf ~/tests/t1
+rm -rf tests/t1
 ```
 
 Cette commande supprime le répertoire `t1` ainsi que son contenu de manière récursive, sans demander de confirmation, même si le répertoire contient des fichiers ou des sous-répertoires.
@@ -122,17 +122,17 @@ Pour accomplir les tâches demandées, voici les étapes et les commandes corres
 
 1. **Créez un fichier `fich1` dans le répertoire `tests/t2`** :
    ```bash
-   touch ~/tests/t2/fich1
+   touch tests/t2/fich1
    ```
 
 2. **Utilisez la commande `ln` pour créer un lien physique nommé `fich2` pointant vers `fich1`** :
    ```bash
-   ln ~/tests/t2/fich1 ~/tests/t2/fich2
+   ln tests/t2/fich1 tests/t2/fich2
    ```
 
 3. **Créez un lien symbolique (ou un lien logique) nommé `fich3` pointant vers `fich1`** :
    ```bash
-   ln -s ~/tests/t2/fich1 ~/tests/t2/fich3
+   ln -s tests/t2/fich1 tests/t2/fich3
    ```
 4. **Explication : Que se passe-t-il si vous supprimez le fichier `fich1` ?**
 
@@ -155,14 +155,14 @@ grep 'return' /etc/bash.bashrc | wc -l
 
 ### Question 2 :
 ```bash
-find ~/tests/t2 -type f -name "*fich*"
+find tests/t2 -type f -name "*fich*"
 ```
 
 ## 3. Utilisateurs et Droits
 
 ### Question 1 : 
 ```bash
-ls -l ~/tests/t2/fich2
+ls -l tests/t2/fich2
 ```
 
 Cette commande affichera une ligne de sortie avec plusieurs informations. Voici comment lire cette ligne :
@@ -183,19 +183,20 @@ Cette commande affichera une ligne de sortie avec plusieurs informations. Voici 
 
 **Exemple :**
 ```
--rw-r--r-- 1 utilisateur groupe 123 Jan 01 12:34 fich2
+-rw-rw-r-- 2 jules jules 0 mars  15 14:28 tests/t2/fich2
+
 ```
 
-- **Propriétaire du fichier** : `utilisateur`
-- **Groupe propriétaire** : `groupe`
+- **Propriétaire du fichier** : `jules`
+- **Groupe propriétaire** : `jules`
 - **Droits d'accès** :
   - Pour le propriétaire (`utilisateur`): lire et écrire (`rw-`)
-  - Pour le groupe (`groupe`): lire seulement (`r--`)
+  - Pour le groupe (`groupe`): lire seulement (`rw-`)
   - Pour les autres utilisateurs: lire seulement (`r--`)
 
 ### Question 2 : 
 ```bash
-chmod 766 ~/tests/t2/fich2
+chmod 766 tests/t2/fich2
 ```
 
 **Explication de la commande :**
@@ -205,19 +206,19 @@ chmod 766 ~/tests/t2/fich2
   - Le premier chiffre (7) définit les permissions pour le propriétaire. Le chiffre 7 est la somme de 4 (lecture), 2 (écriture), et 1 (exécution), donc cela donne au propriétaire le droit de lire, écrire et exécuter le fichier.
   - Le deuxième chiffre (6) définit les permissions pour le groupe. Le chiffre 6 est la somme de 4 (lecture) et 2 (écriture), donnant au groupe le droit de lire et écrire le fichier, mais pas de l'exécuter.
   - Le troisième chiffre (6) est pour les "autres" utilisateurs, avec les mêmes droits que le groupe : lecture et écriture.
-- `~/tests/t2/fich2` : Chemin du fichier dont vous modifiez les permissions.
+- `tests/t2/fich2` : Chemin du fichier dont vous modifiez les permissions.
 
 ## 4. Flux de Redirection et Tubes
 
 ### Question 1 :
 1. **Créer un fichier `batman.txt` contenant la phrase "Gotham City" dans le répertoire `tests/t2`** :
    ```bash
-   echo "Gotham City" > ~/tests/t2/batman.txt
+   echo "Gotham City" > tests/t2/batman.txt
    ```
 
 2. **Copier le contenu de `batman.txt` dans un autre fichier nommé `robin.txt` sans utiliser la commande `cp` mais en utilisant un tube** :
    ```bash
-   cat ~/tests/t2/batman.txt | tee ~/tests/t2/robin.txt > /dev/null
+   cat tests/t2/batman.txt | tee tests/t2/robin.txt > /dev/null
    ```
    Cette méthode avec `tee` permet de copier le contenu de `batman.txt` vers `robin.txt` et pourrait être utile dans des scripts ou des pipelines plus complexes où `tee` offre la flexibilité de copier les données vers plusieurs destinations à la fois ou de conserver la sortie dans le flux pour un traitement ultérieur.
 
@@ -247,30 +248,27 @@ ps -ef | grep '^root' | wc -l
 
 2. **Processus père de tous les autres**
 
-Le processus père de tous les autres processus dans les systèmes Unix et Linux est généralement `init` pour les systèmes utilisant SysVinit, ou `systemd` pour les systèmes l'ayant adopté comme Ubuntu récent, Fedora, et autres. Son PID est généralement `1`.
+Le processus père de tous les autres processus dans les systèmes Unix et Linux est généralement`systemd`. Son PID est généralement `1`.
 ```bash
 ps -p 1
 ```
 Cette commande affiche les informations du processus dont le PID est 1, qui est le premier processus lancé au démarrage du système et par conséquent le parent de tous les autres processus.
-Notez que selon la distribution et la configuration de votre système, le processus avec PID 1 pourrait ne pas être `init` ou `systemd` mais c'est le cas le plus courant.
 
 ### Question 3 :
 1. **Ouvrir `top`** :
    - Dans un terminal, tapez `top` et appuyez sur Entrée.
 
 2. **Combien de processus sont présents actuellement sur votre ordinateur ?**
-   - Regardez la ligne commençant par "Tasks". Le nombre après "total" indique le nombre total de processus sur votre ordinateur.
+   - 326
 
 3. **Combien sont prêts (état running / en cours) ?**
-   - Sur la même ligne "Tasks", regardez le nombre après "running". Cela indique le nombre de processus qui sont actuellement en exécution.
+   - 1
 
 4. **Combien sont bloqués (état sleeping / en veille) ?**
-   - Toujours sur cette ligne "Tasks", le nombre après "sleeping" montre combien de processus sont en état de sommeil, c'est-à-dire pas activement en cours d'exécution mais pas arrêtés.
+   - 325
 
 5. **Combien de processus zombie y-a-t-il ?**
-   - Sur la ligne "Tasks", le nombre après "zombie" indique le nombre de processus zombies. Un processus zombie a terminé son exécution mais attend que son parent récupère son statut de sortie.
-
-Pour quitter `top`, vous pouvez appuyer sur "q".
+   - 0
 
 ## 5.1
 ### Question 1 :
@@ -278,14 +276,11 @@ Pour quitter `top`, vous pouvez appuyer sur "q".
    ```bash
    xclock &
    ```
-   - Cette commande lance l'horloge `xclock`, une horloge analogique (ou numérique selon les paramètres), dans un environnement graphique X Window. Le symbole `&` à la fin de la commande permet de lancer `xclock` en tant que processus d'arrière-plan, ce qui libère le terminal pour d'autres commandes sans fermer `xclock`.
 
 2. **Utiliser `pstree` pour trouver l'instance de `xclock`** :
    ```bash
    pstree | grep xclock
    ```
-   - `pstree` affiche les processus en cours d'exécution sous forme d'arbre. Cette commande peut générer une sortie longue, c'est pourquoi elle est pipée (`|`) dans `grep xclock` pour filtrer et montrer uniquement les lignes contenant `xclock`. Cela vous aidera à trouver l'instance de `xclock` dans l'arbre des processus.
-
 ### Question 2 :
 - **SIGINT (signal numéro 2)** : Ce signal est généralement généré par l'utilisateur en appuyant sur Ctrl+C dans le terminal. Il indique au processus de s'interrompre, offrant une manière propre de terminer les programmes en cours d'exécution.
 
@@ -303,10 +298,8 @@ pgrep xclock
 
 Ensuite, utilisez `kill` avec le PID pour envoyer SIGKILL à `xclock` :
 ```bash
-kill -SIGKILL <PID>
+kill -SIGKILL 6479
 ```
-
-Remplacez `<PID>` par le numéro PID réel de `xclock` trouvé à l'étape précédente. Si `pgrep xclock` retourne plusieurs PIDs, vous devrez décider lequel correspond à l'instance de `xclock` que vous souhaitez tuer, ou vous pouvez tuer toutes les instances en utilisant `pkill` :
 
 ```bash
 pkill -SIGKILL xclock
