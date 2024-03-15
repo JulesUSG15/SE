@@ -142,8 +142,21 @@ Pour accomplir les tâches demandées, voici les étapes et les commandes corres
 
 ## 2.1 Manipulation des Données d'un Fichier
 
-- **`grep [options] [motif] [fichier]`** : Recherche le `[motif]` dans `[fichier]` et affiche les lignes correspondantes. L'option `-v` affiche les lignes ne contenant pas le motif.
-- **`find [répertoire] [options]`** : Recherche des fichiers dans `[répertoire]` suivant les critères spécifiés dans `[options]`.
+### Question 1 :
+1. **Trouvez à l'aide de la commande `grep` les lignes du fichier `/etc/bash.bashrc` ne contenant pas l'un des mots true, True, TRUE** :
+```bash
+grep -v -E 'true|True|TRUE' /etc/bash.bashrc
+```
+
+2. **Quelle commande permet de connaître le nombre de lignes où le mot `return` apparaît dans le fichier `/etc/bash.bashrc` ?**
+```bash
+grep 'return' /etc/bash.bashrc | wc -l
+```
+
+### Question 2 :
+```bash
+find ~/tests/t2 -type f -name "*fich*"
+```
 
 ## 3. Utilisateurs et Droits
 
