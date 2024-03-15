@@ -160,8 +160,52 @@ find ~/tests/t2 -type f -name "*fich*"
 
 ## 3. Utilisateurs et Droits
 
-- **`ls -l [fichier]`** : Affiche les détails d'un fichier, y compris les droits d'accès et le propriétaire.
-- **`chmod [mode] [fichier]`** : Modifie les droits d'accès d'un fichier selon `[mode]`, qui spécifie les nouvelles permissions.
+### Question 1 : 
+```bash
+ls -l ~/tests/t2/fich2
+```
+
+Cette commande affichera une ligne de sortie avec plusieurs informations. Voici comment lire cette ligne :
+
+- **Premier champ** : Il s'agit des droits d'accès au fichier. Il commence par un caractère indiquant le type de fichier (par exemple, `-` pour un fichier ordinaire, `d` pour un répertoire) suivi de trois groupes de trois permissions : pour le propriétaire (`rwx`), pour le groupe (`rwx`), et pour les autres (`rwx`). Chaque position indique respectivement le droit de lire (`r`), d'écrire (`w`), et d'exécuter (`x`) le fichier. Un tiret (`-`) à la place d'une lettre indique l'absence de cette permission.
+  
+- **Deuxième champ** : Nombre de liens physiques vers ce fichier.
+
+- **Troisième champ** : Nom du propriétaire du fichier.
+
+- **Quatrième champ** : Nom du groupe propriétaire du fichier.
+
+- **Cinquième champ** : Taille du fichier en octets.
+
+- **Sixième au huitième champ** : Date de dernière modification.
+
+- **Neuvième champ** : Nom du fichier.
+
+**Exemple :**
+```
+-rw-r--r-- 1 utilisateur groupe 123 Jan 01 12:34 fich2
+```
+
+- **Propriétaire du fichier** : `utilisateur`
+- **Groupe propriétaire** : `groupe`
+- **Droits d'accès** :
+  - Pour le propriétaire (`utilisateur`): lire et écrire (`rw-`)
+  - Pour le groupe (`groupe`): lire seulement (`r--`)
+  - Pour les autres utilisateurs: lire seulement (`r--`)
+
+### Question 2 : 
+```bash
+chmod 766 ~/tests/t2/fich2
+```
+
+**Explication de la commande :**
+
+- `chmod` : Modifie les permissions d'un fichier ou répertoire.
+- `766` : 
+  - Le premier chiffre (7) définit les permissions pour le propriétaire. Le chiffre 7 est la somme de 4 (lecture), 2 (écriture), et 1 (exécution), donc cela donne au propriétaire le droit de lire, écrire et exécuter le fichier.
+  - Le deuxième chiffre (6) définit les permissions pour le groupe. Le chiffre 6 est la somme de 4 (lecture) et 2 (écriture), donnant au groupe le droit de lire et écrire le fichier, mais pas de l'exécuter.
+  - Le troisième chiffre (6) est pour les "autres" utilisateurs, avec les mêmes droits que le groupe : lecture et écriture.
+- `~/tests/t2/fich2` : Chemin du fichier dont vous modifiez les permissions.
 
 ## 4. Flux de Redirection et Tubes
 
