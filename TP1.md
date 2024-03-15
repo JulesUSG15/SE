@@ -2,7 +2,7 @@
 
 ## 1. Organisation de Dossiers et Fichiers
 
-### Question 1
+### Question 1 : 
 - **`pwd`** : Affiche le chemin absolu du répertoire courant.
 - **`cd [répertoire]`** : Change le répertoire courant pour `[répertoire]`. Si aucun répertoire n'est spécifié, il revient au répertoire personnel de l'utilisateur.
 - **`ls [options]`** : Liste les fichiers et répertoires dans le répertoire courant. Les options `-a`, `-l` et `-al` permettent respectivement d'afficher les fichiers cachés, d'afficher les détails des fichiers et les deux combinés.
@@ -13,7 +13,7 @@
 - **`rmdir [répertoire]`** : Supprime un répertoire vide nommé `[répertoire]`.
 - **`rm [fichier]`** : Supprime le fichier nommé `[fichier]`.
 
-### Question 2
+### Question 2 :
 1. **Revenir à votre répertoire utilisateur** :
    - ```bash
      cd ~
@@ -50,7 +50,7 @@
      ```bash
      ls -al
      ```
-### Question 3
+### Question 3 :
 1. **Modifiez le nom du fichier `texte.txt` en `texte2.txt`** :
    ```bash
    mv tpse/texte.txt tpse/texte2.txt
@@ -87,7 +87,7 @@
 
 La commande `rmdir` ne supprime que les répertoires vides. Si `tests/t1` contient encore des fichiers ou des sous-répertoires (ce qui ne sera pas le cas ici puisque nous avons déplacé `texte2.txt` en dehors de celui-ci avant de tenter de le supprimer), la commande échouera en retournant une erreur indiquant que le répertoire n'est pas vide. Dans notre cas, comme `tests/t1` devrait être vide après le déplacement du fichier, `rmdir` devrait réussir à supprimer le répertoire.
 
-### Question 4
+### Question 4 :
 ```bash
 rm -rf ~/tests/t1
 ```
@@ -102,11 +102,43 @@ Cette commande supprime le répertoire `t1` ainsi que son contenu de manière r�
 
 ## 2. Manipulation des Fichiers
 
+### Question 1 :
 - **`cat [fichier]`** : Affiche le contenu d'un fichier sur la console.
 - **`less [fichier]`** : Affiche le contenu d'un fichier page par page.
 - **`nl [fichier]`** : Affiche le contenu d'un fichier avec les lignes numérotées.
+
+### Question 2 :
 - **`head [options] [fichier]`** et **`tail [options] [fichier]`** : Affichent respectivement le début et la fin d'un fichier. L'option `-n [nombre]` permet de spécifier le nombre de lignes à afficher.
 - **`ln [option] [source] [lien]`** : Crée un lien physique (sans option) ou symbolique (`-s`) nommé `[lien]` pointant vers `[source]`.
+
+### Question 3 :
+Pour afficher les lignes du fichier `/etc/passwd` en les numérotant, on utilise : 
+
+```bash
+nl /etc/passwd
+```
+### Question 4 :
+Pour accomplir les tâches demandées, voici les étapes et les commandes correspondantes :
+
+1. **Créez un fichier `fich1` dans le répertoire `tests/t2`** :
+   ```bash
+   touch ~/tests/t2/fich1
+   ```
+
+2. **Utilisez la commande `ln` pour créer un lien physique nommé `fich2` pointant vers `fich1`** :
+   ```bash
+   ln ~/tests/t2/fich1 ~/tests/t2/fich2
+   ```
+
+3. **Créez un lien symbolique (ou un lien logique) nommé `fich3` pointant vers `fich1`** :
+   ```bash
+   ln -s ~/tests/t2/fich1 ~/tests/t2/fich3
+   ```
+4. **Explication : Que se passe-t-il si vous supprimez le fichier `fich1` ?**
+
+- **Pour le lien physique (`fich2`)** : Les liens physiques pointent vers l'emplacement du contenu du fichier sur le disque. Ainsi, si vous supprimez `fich1`, `fich2` continuera d'accéder au contenu du fichier sans problème car le lien physique ne fait pas référence au nom du fichier mais directement à son contenu stocké sur le disque. Le contenu du fichier sera conservé tant qu'il existera au moins un lien physique pointant vers celui-ci. Le système ne libérera l'espace occupé par le fichier sur le disque que lorsque le dernier lien physique sera supprimé.
+
+- **Pour le lien symbolique (`fich3`)** : Les liens symboliques pointent vers le nom du fichier et non vers son contenu direct sur le disque. Si vous supprimez `fich1`, le lien symbolique `fich3` deviendra un lien brisé (ou un lien mort), car il pointera vers un fichier qui n'existe plus. Vous ne pourrez pas utiliser `fich3` pour accéder au contenu de `fich1` après la suppression de ce dernier, car le lien symbolique ne pointe plus vers un fichier existant.
 
 ## 2.1 Manipulation des Données d'un Fichier
 
