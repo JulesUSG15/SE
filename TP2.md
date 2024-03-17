@@ -300,7 +300,7 @@ L'utilisation de `wait(NULL)` dans le processus parent assure que le message du 
 
 ## 4. Création de Processus en Chaîne
 
-### Question 1 : 
+### Question 1 : Ecrivez ce programme. Donnez le programme dans le compte rendu et représentez les processus créés pour N = 3.
 ```c
 #include <stdio.h>
 #include <unistd.h>
@@ -325,6 +325,13 @@ int main() {
     return 0;
 }
 ```
+```
+┌──(jules@jules-MacBookPro)-[~/…/Polytech/SE/TP2/output]
+└─$ ./"4"
+Processus 36828 créé par processus 36827
+Processus 36829 créé par processus 36828
+Processus 36830 créé par processus 36829
+```                                     
 
 Ce programme crée une chaîne de processus où chaque processus, à son tour, crée un processus enfant jusqu'à ce que le nombre total de processus créés atteigne N. Après avoir créé un processus enfant, le processus parent attend la fin de ce dernier avec `wait(NULL)` avant de terminer lui-même. Cela garantit que chaque processus enfant termine avant son parent, empêchant ainsi la création de processus zombies.
 
@@ -344,4 +351,86 @@ Processus initial (main)
 - Le Processus 1 crée le Processus 2.
 - Le Processus 2 crée le Processus 3.
 
-### Question 2 :
+### Question 2 : Modifiez le programme pour que le processus initial attende uniquement la fin de son fils. Donnez le programme modifié dans le compte rendu en justifiant les modifications effectuées.
+Voici le programme modifié :
+
+```c
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+int main() {
+    int N = 3; // Nombre de processus à créer en plus du processus initial.
+    pid_t pid;
+    int i;
+
+    for (i = 0; i < N; i++) {
+        pid = fork();
+        if (pid == 0) {
+            // Processus enfant
+            printf("Processus %d créé par processus %d\n", getpid(), getppid());
+            if (i < N-1) {
+                continue; // Laisse le processus enfant créer son propre enfant
+            } else {
+                return 0; // Le dernier processus dans la chaîne ne crée pas d'enfant et se termine
+            }
+        } else {
+            // Processus parent
+            if (i == 0) {
+                wait(NULL); // Le processus initial attend la fin de son premier fils
+            }
+            break; // Les processus parents (sauf le processus initial) ne créent pas d'enfants et ne les attendent pas
+        }
+    }
+    return 0;
+}
+```
+
+#### Justification des modifications :
+
+- **Boucle `for`**: Parcourt toujours N fois, avec la possibilité de créer jusqu'à N processus en chaîne.
+- **`if (pid == 0)`**: À l'intérieur de cette condition, chaque processus enfant peut potentiellement devenir parent s'il ne s'agit pas du dernier processus de la chaîne (`if (i < N-1)`). Le dernier processus dans la chaîne (quand `i == N-1`) se termine simplement sans créer de processus enfant.
+- **`else`**: Pour le processus parent, une vérification supplémentaire (`if (i == 0)`) est effectuée pour s'assurer que seul le processus initial attend la fin de son premier fils avec `wait(NULL)`. Les processus intermédiaires (qui sont à la fois parents et enfants dans la chaîne, sauf le processus initial) ne font pas d'attente et se terminent directement après la création de leur enfant, ce qui empêche la chaîne d'attendre à chaque niveau.
+
+### Question 3 : Modifiez le programme pour que le processus initial attende la fin de tous les processus créés. Donnez le programme modifié dans le compte rendu en justifiant les modifications effectuées.
+```c
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+void creerChaineDeProcessus(int N, int niveauActuel) {
+    if (N == 0) return; // Cas de base : plus aucun processus à créer.
+
+    pid_t pid = fork();
+    
+    if (pid == -1) {
+        // Échec du fork.
+        perror("fork");
+        return;
+    } else if (pid == 0) {
+        // Processus enfant
+        printf("Processus %d créé par processus %d\n", getpid(), getppid());
+        creerChaineDeProcessus(N - 1, niveauActuel + 1); // Créer récursivement le prochain processus dans la chaîne.
+        exit(0); // Le processus enfant se termine après avoir créé son enfant.
+    } else {
+        // Le processus parent attend la terminaison de son enfant.
+        wait(NULL);
+        if (niveauActuel == 1) {
+            printf("Processus initial (PID %d) termine après tous ses enfants.\n", getpid());
+        }
+    }
+}
+
+int main() {
+    int N = 3; // Nombre de processus à créer dans la chaîne, sans compter le processus initial.
+    creerChaineDeProcessus(N, 1); // Commence la chaîne avec le niveau initial du processus défini à 1.
+    return 0;
+}
+```
+Dans ce programme :
+
+- La fonction `creerChaineDeProcessus` est utilisée pour créer une chaîne de processus. Elle prend deux arguments : `N`, qui représente le nombre de processus restants à créer dans la chaîne, et `niveauActuel`, qui indique le niveau actuel du processus dans la chaîne pour contrôler l'affichage.
+- Si `N` est égal à 0, cela signifie qu'il n'y a plus de processus à créer, et la fonction retourne sans faire de `fork()`.
+- Lorsqu'un processus enfant est créé (`pid == 0`), il affiche son PID et le PID de son parent, puis appelle récursivement `creerChaineDeProcessus` pour créer son propre enfant, diminuant `N` de 1.
+- Chaque processus enfant se termine après avoir créé son enfant (s'il en reste à créer), à l'exception du dernier processus de la chaîne qui se termine sans créer d'enfant.
+- Le processus initial (au niveau 1) attend la terminaison de son premier enfant directement. Après l'attente, il affiche un message indiquant qu'il termine après tous ses enfants, ce qui est vérifié par `if (niveauActuel == 1)`.
