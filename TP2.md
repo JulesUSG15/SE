@@ -275,44 +275,73 @@ int main(int argc, char *argv[]) {
 
 ## 3. La Primitive exec
 
-#### Programme `exec1.c`
+### Programme `exec1.c`
 
-- **Question**: Résultat de l'exécution et explication de qui affiche quoi et pourquoi.
+### Question : Résultat de l'exécution et explication de qui affiche quoi et pourquoi.
+1. Après un délai de 2 secondes :
+   ```
+   je suis le fils !
+   ```
+   Cette sortie provient du processus fils après l'exécution de la commande `echo`.
 
-#### Programme `exec2.c`
+2. Immédiatement après :
+   ```
+   Je suis ton père
+   ```
+   Cette sortie provient du processus parent après que le processus fils a terminé.
 
-- **Représentation des processus et ordre de terminaison**: Je vais dessiner l'arbre de processus et discuter des ordres possibles de terminaison.
+Le message `je suis le fils !` est affiché par le processus fils grâce à l'exécution du programme `/bin/echo` avec les arguments fournis. Le processus parent, après avoir attendu la fin de l'exécution du processus fils (`wait(NULL)`), affiche le message `Je suis ton père`. 
 
-### 4. Création de Processus en Chaîne
+L'utilisation de `wait(NULL)` dans le processus parent assure que le message du parent sera toujours affiché après celui du fils, car le parent attend la terminaison du fils avant de continuer son exécution.
 
-- **Écriture du programme**: Pour N=3, rédiger le programme demandé, le représenter, et discuter des modifications pour que le processus initial attende soit uniquement la fin de son fils soit la fin de tous les processus créés.
+### Programme `exec2.c`
 
-Pour commencer, je vais compiler et tester le programme `fork1.c` pour répondre à la première série de questions. Ensuite, je procéderai étape par étape pour chaque exercice. Examinons d'abord `fork1.c`.
+### Question : Représentation des processus et ordre de terminaison
 
-J'ai préparé le fichier `fork1.c` pour la compilation. Cependant, je ne peux pas compiler ou exécuter directement des programmes C dans cet environnement. Vous pouvez compiler et exécuter ce programme sur votre système en utilisant la commande suivante dans un terminal :
+## 4. Création de Processus en Chaîne
+
+### Question 1 : 
+```c
+#include <stdio.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+int main() {
+    int N = 3; // Nombre de processus à créer en plus du processus initial.
+    pid_t pid;
+    int i;
+
+    for (i = 0; i < N; i++) {
+        pid = fork();
+        if (pid == 0) {
+            // Processus enfant
+            printf("Processus %d créé par processus %d\n", getpid(), getppid());
+        } else {
+            // Processus parent attend la fin du processus enfant
+            wait(NULL);
+            break; // Le processus parent ne crée pas plus de processus
+        }
+    }
+    return 0;
+}
+```
+
+Ce programme crée une chaîne de processus où chaque processus, à son tour, crée un processus enfant jusqu'à ce que le nombre total de processus créés atteigne N. Après avoir créé un processus enfant, le processus parent attend la fin de ce dernier avec `wait(NULL)` avant de terminer lui-même. Cela garantit que chaque processus enfant termine avant son parent, empêchant ainsi la création de processus zombies.
+
+Pour N = 3, la chaîne de processus ressemblera à ceci :
 
 ```
-gcc -o fork1 /mnt/data/fork1_compiled.c && ./fork1
+Processus initial (main)
+    |
+    --> Processus 1 (créé par le processus initial)
+         |
+         --> Processus 2 (créé par le processus 1)
+              |
+              --> Processus 3 (créé par le processus 2)
 ```
 
-Après avoir exécuté le programme, veuillez observer les résultats, en particulier les valeurs de `x` affichées par le processus parent et le processus fils, ainsi que les PIDs et PPIDs. Cela vous aidera à répondre à la question sur le comportement de la variable `x` après l'appel à `fork()`.
+- Le processus initial crée le Processus 1.
+- Le Processus 1 crée le Processus 2.
+- Le Processus 2 crée le Processus 3.
 
-En attendant, je vais continuer avec la description des autres parties du TP. Pour les exercices suivants, je vais fournir des explications théoriques et des directives pour vous aider à comprendre et à résoudre les exercices par vous-même.
-
-### 1.1 Fork Imbriqué
-
-Pour cet exercice, vous devez écrire un programme qui crée un arbre de processus selon le schéma donné dans l'énoncé du TP. Chaque processus doit afficher son PID et PPID, ainsi que les PIDs des fils qu'il engendre, s'il y en a. Pour observer l'ordre d'apparition des messages, exécutez plusieurs fois le programme et notez les variations.
-
-### 2. Terminaison de Processus
-
-Pour `terminaison.c`, vous devez comprendre comment `exit()` et `wait()` fonctionnent ensemble pour gérer la terminaison des processus. En particulier, observez comment la valeur de retour d'un processus fils est récupérée par le processus parent et comment un processus zombie est créé et géré.
-
-### 3. La Primitive exec
-
-Le fichier `exec1.c` montre comment un processus peut être remplacé par un autre programme en utilisant `execl()`. Après l'exécution de `exec1.c`, notez quel processus affiche quel message et pourquoi. Pour `exec2.c`, analysez comment les appels à `fork()` et `execl()` interagissent pour créer une structure de processus complexe.
-
-### 4. Création de Processus en Chaîne
-
-Enfin, pour l'exercice sur la création de processus en chaîne, vous devez écrire un programme où chaque processus crée un autre processus dans une séquence jusqu'à ce que N processus soient créés. Modifiez ensuite le programme pour contrôler comment le processus initial attend la fin des processus qu'il a créés.
-
-Chaque exercice requiert que vous compreniez les interactions entre les processus parent et fils, ainsi que l'utilisation des appels système pour la gestion des processus. N'hésitez pas à compiler et exécuter les exemples sur votre machine pour observer leur comportement.
+### Question 2 :
