@@ -95,15 +95,185 @@ P6 : mon pid est 15805, mon ppid est 15802.
 
 ## 2. Terminaison de Processus
 
-#### Programme `terminaison.c`
+### Programme `terminaison.c`
 
-- **Questions à répondre**:
-    1. Nombre de processus créés, affichages effectués, et justification.
-    2. Effet de la suppression de `exit(2)`.
-    3. Création d'un processus zombie pendant 30 secondes et vérification.
-    4. Effet de l'ajout de `sleep(30)` avant `exit(1)`.
+### Question 1 : Donnez le nombre de processus créés, ainsi que les affichages effectués par chaque processus en justifiant.Vérifiez votre réponse en ajoutant des affichages dans le programme.
 
-### 3. La Primitive exec
+- **Nombre de processus créés**: 3 (le processus original `P1`, et deux processus fils `P2` et `P3`).
+- **Affichages effectués**:
+    - `P2` affichera `a : 20 \n` juste avant de terminer.
+    - `P1` attend que `P2` termine et affichera `a : 10 ; e : 1 \n`, où `e` est le code de sortie de `P2` (1 dans ce cas).
+
+`P3` ne fait pas d'affichage directement mais influence le code de sortie que `P2` peut récupérer si `P2` utilisait `wait()`. Cependant, dans ce code, `P2` termine sans attendre `P3`, donc le code de sortie de `P3` n'est pas récupéré ni affiché par `P2`.
+
+- **Vérification par Affichage Supplémentaire**
+
+Voici le nouveau code avec des affichages supplémentaires :
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+int main(int argc, char *argv[]) {
+    int a, e;
+    a = 10;
+    printf("Start: PID=%d, PPID=%d\n", getpid(), getppid()); // Affiche le PID au début
+    if (fork() == 0) {
+        a = a *2;
+        printf("P2: PID=%d, PPID=%d, a=%d\n", getpid(), getppid(), a); // P2 affiche son PID, PPID, et a
+        if (fork() == 0) {
+            a = a +1;
+            printf("P3: PID=%d, PPID=%d, a=%d\n", getpid(), getppid(), a); // P3 affiche son PID, PPID, et a
+            exit(2);
+        }
+        wait(NULL); // P2 attends P3 pour synchroniser l'affichage
+        exit(1);
+    }
+    wait(&e);
+    printf("P1: PID=%d, a=%d ; e=%d \n", getpid(), a, WEXITSTATUS(e)); // P1 affiche son PID, a, et le code de sortie de P2
+    return(0);
+}
+```
+Voici le résultat que j'obtiens :
+```
+┌──(jules@jules-MacBookPro)-[~/Documents/Polytech/SE/output]
+└─$ ./"terminaison"
+Start: PID=23654, PPID=9558
+P2: PID=23655, PPID=23654, a=20
+P3: PID=23656, PPID=23655, a=21
+P1: PID=23654, a=10 ; e=1 
+```
+
+### Question 2 : On supprime l’instruction exit(2), reprenez la question précédente en conséquence.
+
+1. **Premier processus fils** (`P2`):
+    - Multiplie `a` par 2, donc `a = 20`.
+    - Crée un processus fils (`P3`).
+    - **Puisque `P3` n'effectue plus `exit(2)`, il continue l'exécution du reste du code dans `P2`.**
+    - Affiche `a : 20 \n`.
+    - Termine avec `exit(1)`.
+
+2. **Second processus fils** (`P3`):
+    - Incrémente `a` de 1, donc `a = 21`.
+    - Poursuit l'exécution et effectue la même instruction d'affichage que `P2` (car il continue à exécuter le code après la condition `if (fork() == 0)` sans rencontrer un `exit()` précoce).
+    - Affiche `a : 21 \n`.
+    - Termine implicitement à la fin de `main()`, retournant 0 comme code de sortie par défaut (ceci n'est pas visible car `wait(&e)` dans le processus parent (`P1`) attend seulement le premier processus fils (`P2`)).
+
+3. **Processus principal** (`P1`):
+    - Ne modifie pas `a` après la création de `P2`, donc `a = 10`.
+    - Attend que `P2` se termine et récupère son code de sortie via `e`.
+    - Affiche `a : 10 ; e : 1 \n`.
+
+Voici le résultat que j'obtiens :
+```
+┌──(jules@jules-MacBookPro)-[~/Documents/Polytech/SE/output]
+└─$ ./"terminaison"
+a : 20 
+a : 21 
+a : 10 ; e : 1 
+```
+
+### Question 3 : Modifiez le programme initial pour créer un processus zombie pendant 30 secondes.
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+int main(int argc, char *argv[]) {
+    int a, e;
+    a = 10;
+    pid_t pid = fork();
+    
+    if (pid == 0) { // Processus enfant
+        a = a * 2;
+        pid_t pid_child = fork();
+        if (pid_child == 0) { // Enfant de l'enfant (petit-enfant)
+            a = a + 1;
+            printf("Petit-enfant en pause, PID = %d\n", getpid());
+            sleep(30); // Pause pour créer un processus zombie
+            exit(2); // Le petit-enfant termine
+        }
+        // Le processus enfant se termine immédiatement
+        // Ne pas attendre le petit-enfant exprès pour créer un zombie
+        exit(1);
+    }
+    else {
+        // Le processus parent attend immédiatement l'enfant pour éviter un zombie ici
+        wait(&e);
+        printf("a : %d ; e : %d\n", a, WEXITSTATUS(e));
+        // Le parent se termine rapidement, laissant le petit-enfant devenir un zombie temporairement
+        sleep(35); // Attendre un peu plus longtemps que le petit-enfant pour observer le zombie
+    }
+    return 0;
+}
+```
+
+Dans ce programme, le "petit-enfant" s'endort pendant 30 secondes avant de se terminer. Cependant, son parent (l'enfant du processus initial) se termine presque immédiatement après sa création, sans attendre que le "petit-enfant" se termine. Cela crée une condition où le "petit-enfant" devient un processus zombie après sa terminaison, jusqu'à ce que le grand-parent (le processus initial) termine l'attente et nettoie le statut du zombie.
+
+- **Vérification avec `ps -al`**
+```
+┌──(jules@jules-MacBookPro)-[~/Documents/Polytech/SE]
+└─$ ps -al
+F S   UID     PID    PPID  C PRI  NI ADDR SZ WCHAN  TTY          TIME CMD
+0 S  1000    1781    1778  0  80   0 - 56593 do_sys tty2     00:00:00 gnome-session-b
+0 S  1000   27958    9558  0  80   0 -   655 hrtime pts/0    00:00:00 terminaison
+1 S  1000   27960    1729  0  80   0 -   655 hrtime pts/0    00:00:00 terminaison
+4 R  1000   28028   28002  0  80   0 -  3858 -      pts/1    00:00:00 ps
+```
+### Question 4 : Ajoutez à votre programme précédent l’instruction sleep(30) à la ligne 11 (avant exit(1)). Que se passe-t-il ? Expliquez.
+
+Si nous ajoutons `sleep(30);` juste avant `exit(1);` dans le processus enfant, le comportement du programme change de manière significative. Cette modification introduit une pause dans le processus enfant avant qu'il ne termine, permettant potentiellement au "petit-enfant" de terminer et d'éviter de devenir un zombie pendant que l'enfant dort. Voyons cela plus en détail.
+
+### Programme Modifié avec `sleep(30)` Avant `exit(1)`
+
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/wait.h>
+
+int main(int argc, char *argv[]) {
+    int a, e;
+    a = 10;
+    pid_t pid = fork();
+    
+    if (pid == 0) { // Processus enfant
+        a = a * 2;
+        pid_t pid_child = fork();
+        if (pid_child == 0) { // Enfant de l'enfant (petit-enfant)
+            a = a + 1;
+            printf("Petit-enfant en pause, PID = %d\n", getpid());
+            sleep(30); // Pause pour permettre au parent de devenir temporairement un zombie
+            exit(2); // Le petit-enfant termine
+        }
+        sleep(30); // Ajout du sleep ici
+        printf("Enfant se termine, PID = %d\n", getpid());
+        exit(1);
+    }
+    else {
+        // Le processus parent attend l'enfant
+        wait(&e);
+        printf("a : %d ; e : %d\n", a, WEXITSTATUS(e));
+        sleep(35); // Assurez-vous que le parent attend assez longtemps pour observer le processus zombie
+    }
+    return 0;
+}
+```
+1. **Processus parent (`P1`)**: Crée un processus enfant (`P2`) et attend sa terminaison avec `wait(&e)` avant d'entrer dans son propre `sleep(35)` pour assurer qu'il reste actif pour nettoyer tout processus zombie potentiel après le réveil.
+
+2. **Processus enfant (`P2`)**: Multiplie `a` par 2 et crée un "petit-enfant" (`P3`). Au lieu de se terminer immédiatement, il entre maintenant en pause pour 30 secondes grâce au `sleep(30)` ajouté. Après cette pause, il imprime un message indiquant sa propre terminaison et se termine avec `exit(1)`.
+
+3. **"Petit-enfant" (`P3`)**: Incrémente `a` de 1, dort également pour 30 secondes (comme avant), puis se termine avec `exit(2)`.
+
+#### Effets de l'Ajout de `sleep(30)` Avant `exit(1)`
+
+- **Synchronisation des Terminaisons**: L'ajout de `sleep(30)` avant `exit(1)` dans `P2` synchronise presque les terminaisons de `P2` et `P3`. Cela signifie que `P3` pourrait se terminer juste avant ou autour du même moment que `P2`. Si `P2` attend `P3` pour terminer grâce au `sleep()`, il y a moins de chances que `P3` devienne un zombie, car `P2` peut encore être en vie lorsque `P3` se termine. Néanmoins, si `P3` se termine avant que `P2` n'appelle `wait()`, il deviendra un zombie jusqu'à ce que `P2` se réveille et termine, permettant au processus parent de nettoyer.
+- **Pas de Processus Zombie**: Avec les deux `sleep(30)` en place, il est très probable que le "petit-enfant" (`P3`) ne devienne pas un zombie du tout, car son processus parent (`P2`) ne se termine pas avant lui.
+
+## 3. La Primitive exec
 
 #### Programme `exec1.c`
 
