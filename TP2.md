@@ -1,4 +1,4 @@
-# TP 2 
+# TP 2
 
 ## 1. Création de Processus: Utilisation de fork
 
@@ -9,21 +9,91 @@
 - **Arbre des processus**: Le processus parent (P) crée un processus fils (F).
 
 - **Compilation et test**: 
-┌──(jules@jules-MacBookPro)-[~/Documents/Polytech/SE/output]
-└─$ ./"fork1"
-debut
-parent: je suis 12410, parent de 12411 et fils de 9558. x=0
-Fin
-child : je suis 12411, fils de 12410. x=2
-Fin
+```
+┌──(jules@jules-MacBookPro)-[~/Documents/Polytech/SE/output]  
+└─$ ./"fork1"  
+debut  
+parent: je suis 12410, parent de 12411 et fils de 9558. x=0  
+Fin  
+child : je suis 12411, fils de 12410. x=2  
+Fin  
+```
 
-### 1.1 Fork Imbriqué
+## 1.1 Fork Imbriqué
 
-- **Programme à écrire**: Un programme qui reproduit l'arbre généalogique fourni, chaque processus affichant son PID et PPID.
+- **Programme à écrire**: 
+```c
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <sys/types.h>
 
-- **Observation et commentaire sur l'ordre d'apparition des messages**: Une fois le programme écrit, je vais l'exécuter plusieurs fois pour observer l'ordre d'apparition des messages et expliquer le comportement.
+int main() {
+    pid_t pid;
+    printf("Debut. \n");
+    printf("P1 : mon pid est %d, mon ppid est %d. \n", (int) getpid(), (int) getppid());
+    pid = fork();
+    if (pid == 0) {
+        printf("P2 : mon pid est %d, mon ppid est %d. \n", (int) getpid(), (int) getppid());
+    }
+    else {
+        printf ("Je suis %d et mon fils est %d. \n", getpid(), pid);
+        pid = fork();
+        if (pid == 0) {
+            printf("P3 : mon pid est %d, mon ppid est %d. \n", (int) getpid(), (int) getppid());
+            pid = fork();
+            if(pid == 0) {
+                printf("P5 : mon pid est %d, mon ppid est %d. \n", (int) getpid(), (int) getppid());
+            }
+            else {
+                printf ("Je suis %d et mon fils est %d. \n", getpid(), pid);
+                pid = fork();
+                if(pid == 0) {
+                    printf("P6 : mon pid est %d, mon ppid est %d. \n", (int) getpid(), (int) getppid());
+                }
+                else {
+                    printf ("Je suis %d et mon fils est %d. \n", getpid(), pid);
+                }
+            }
+        }
+        else {
+            printf ("Je suis %d et mon fils est %d. \n", getpid(), pid);
+            pid = fork();
+            if (pid == 0) {
+                printf("P4 : mon pid est %d, mon ppid est %d. \n", (int) getpid(), (int) getppid());
+            }
+            else {
+                printf ("Je suis %d et mon fils est %d. \n", getpid(), pid);
+            }
+        }
+    }
+    return 0;
+}
+```
 
-### 2. Terminaison de Processus
+- **Résultat obtenue**:
+```
+┌──(jules@jules-MacBookPro)-[~/Documents/Polytech/SE/output]  
+└─$ ./"1.1"  
+Debut.  
+P1 : mon pid est 15800, mon ppid est 9558.  
+Je suis 15800 et mon fils est 15801.  
+P2 : mon pid est 15801, mon ppid est 15800.  
+Je suis 15800 et mon fils est 15802.  
+P3 : mon pid est 15802, mon ppid est 15800.  
+Je suis 15800 et mon fils est 15803.  
+P4 : mon pid est 15803, mon ppid est 15800.  
+Je suis 15802 et mon fils est 15804.  
+P5 : mon pid est 15804, mon ppid est 15802.  
+Je suis 15802 et mon fils est 15805.  
+P6 : mon pid est 15805, mon ppid est 15802.   
+```
+
+- **Observation et commentaire sur l'ordre d'apparition des messages**: Je vois que l’ordre
+
+ d’apparition des messages n’est pas l’ordre du code. Si je relance plusieurs fois le programme, j'observe que les PID et l’ordre d’apparition des messages changent. Je peux donc en déduire que les PID sont incrémentés et que l’ordre d’exécution des fils est aléatoire.
+
+## 2. Terminaison de Processus
 
 #### Programme `terminaison.c`
 
