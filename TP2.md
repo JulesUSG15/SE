@@ -18,6 +18,9 @@ Fin
 child : je suis 12411, fils de 12410. x=2  
 Fin  
 ```
+- **Remarque**:
+Le résultat est bien le même que ce que j'avais décris à la question précédente. 
+Les valeurs de la variable x confirment bien que la mémoire n’est pas partagée entre le processus père et fils.
 
 ## 1.1 Fork Imbriqué
 
@@ -89,9 +92,8 @@ Je suis 15802 et mon fils est 15805.
 P6 : mon pid est 15805, mon ppid est 15802.   
 ```
 
-- **Observation et commentaire sur l'ordre d'apparition des messages**: Je vois que l’ordre
-
- d’apparition des messages n’est pas l’ordre du code. Si je relance plusieurs fois le programme, j'observe que les PID et l’ordre d’apparition des messages changent. Je peux donc en déduire que les PID sont incrémentés et que l’ordre d’exécution des fils est aléatoire.
+- **Observation et commentaire sur l'ordre d'apparition des messages**: 
+Je vois que l’ordre d’apparition des messages n’est pas l’ordre du code. Si je relance plusieurs fois le programme, j'observe que les PID et l’ordre d’apparition des messages changent. Je peux donc en déduire que les PID sont incrémentés et que l’ordre d’exécution des fils est aléatoire.
 
 ## 2. Terminaison de Processus
 
@@ -297,6 +299,32 @@ L'utilisation de `wait(NULL)` dans le processus parent assure que le message du 
 ### Programme `exec2.c`
 
 ### Question : Représentation des processus et ordre de terminaison
+
+1. **Au point A**: Le programme affiche le nom de lui-même (c'est-à-dire `argv[0]`).
+2. **Au point B**: Le processus principal (`P0`) appelle `fork()`. Cela crée un nouveau processus enfant (`P1`). À ce stade, nous avons deux processus: le processus parent (`P0`) et le processus enfant (`P1`).
+3. **Au point C (dans P1)**: Le processus enfant `P1` appelle `fork()` une deuxième fois, créant un deuxième processus enfant (`P2`). Maintenant, `P1` devient un parent à `P2`.
+
+À partir de ce code, le diagramme d'arbre des processus ressemble à ceci:
+
+```
+     P0
+      |
+      P1
+      |
+      P2 ----> exec("/prog")
+```
+
+- **P0** est le processus initial.
+- **P1** est créé par `P0` grâce à la première invocation de `fork()`.
+- **P2** est créé par `P1` grâce à la deuxième invocation de `fork()` et exécute un nouveau programme appelé `prog` à l'aide de `exec()`.
+
+#### Ordres de terminaison des processus
+
+- **P2** doit terminer avant `P1` parce que `P1` appelle `exit(0)` immédiatement après la création de `P2` (et `P2` exécute un nouveau programme qui, une fois terminé, signifie la fin de `P2`).
+- **P0** attend que `P1` termine grâce à l'appel `wait(&retour)` avant de continuer. Cela signifie que `P0` terminera après `P1` (et donc après `P2` également, puisque `P1` attend que `P2` termine).
+
+Ainsi, les ordres possibles de terminaison sont:
+- **P2** termine en premier, suivi de **P1**, et enfin **P0**. 
 
 ## 4. Création de Processus en Chaîne
 
